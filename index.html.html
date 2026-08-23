@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inventory Gate Pass Manager</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="toast"></div>
+
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><div class="brand-mark">GP</div><div><strong>GatePass</strong><small>Inventory Manager</small></div></div>
+    <nav>
+      <button class="nav-btn active" data-page="dashboard">⌂ Dashboard</button>
+      <button class="nav-btn" data-page="gatepasses">▣ Gate Passes</button>
+      <button class="nav-btn" data-page="new-pass">＋ New Gate Pass</button>
+      <button class="nav-btn" data-page="inventory">▤ Inventory</button>
+      <button class="nav-btn" data-page="templates">▦ Templates</button>
+      <button class="nav-btn" data-page="settings">⚙ Settings</button>
+    </nav>
+    <div class="sidebar-bottom">
+      <button class="nav-btn" id="backupBtn">⇩ Backup JSON</button>
+      <label class="nav-btn file-btn">⇧ Restore JSON<input id="restoreInput" type="file" accept=".json" hidden></label>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <button class="icon-btn" id="menuBtn">☰</button>
+      <div><h1 id="pageTitle">Dashboard</h1><p id="pageSubtitle">Inventory and gate pass overview</p></div>
+      <div class="top-actions">
+        <button class="btn secondary" id="themeBtn">☾</button>
+        <button class="btn primary" data-page="new-pass">＋ New Gate Pass</button>
+      </div>
+    </header>
+
+    <section id="page-dashboard" class="page active">
+      <div class="stats-grid">
+        <div class="stat"><span>Total Gate Passes</span><b id="statTotal">0</b></div>
+        <div class="stat"><span>Today</span><b id="statToday">0</b></div>
+        <div class="stat"><span>Approved</span><b id="statApproved">0</b></div>
+        <div class="stat"><span>Inventory Items</span><b id="statInventory">0</b></div>
+        <div class="stat"><span>Issued Qty</span><b id="statIssued">0</b></div>
+      </div>
+      <div class="grid-2">
+        <div class="card"><div class="card-head"><h2>Recent Gate Passes</h2><button class="text-btn" data-page="gatepasses">View all</button></div><div id="recentPasses"></div></div>
+        <div class="card"><div class="card-head"><h2>Low Stock</h2><button class="text-btn" data-page="inventory">Inventory</button></div><div id="lowStock"></div></div>
+      </div>
+    </section>
+
+    <section id="page-gatepasses" class="page">
+      <div class="toolbar"><input id="passSearch" class="search" placeholder="Search gate pass, employee, item code..."><select id="passStatusFilter"><option value="">All statuses</option><option>Draft</option><option>Pending</option><option>Approved</option><option>Issued</option><option>Returned</option><option>Closed</option><option>Cancelled</option></select></div>
+      <div class="card table-card"><div class="table-wrap"><table><thead><tr><th>Gate Pass</th><th>Date</th><th>Type</th><th>Employee</th><th>Items</th><th>Qty</th><th>Status</th><th>Actions</th></tr></thead><tbody id="passesTable"></tbody></table></div></div>
+    </section>
+
+    <section id="page-new-pass" class="page">
+      <form id="passForm">
+        <div class="card">
+          <div class="card-head"><h2>Gate Pass Information</h2><span class="pill" id="passNoPreview"></span></div>
+          <div class="form-grid">
+            <label>Gate Pass No<input id="gpNo" name="gatePassNo" readonly></label>
+            <label>Date<input id="gpDate" name="date" type="date" required></label>
+            <label>Time<input id="gpTime" name="time" type="time"></label>
+            <label>Type<select name="type"><option>Material Issue</option><option>Material Return</option><option>Transfer</option><option>Delivery</option><option>Repair</option><option>Maintenance</option><option>Scrap</option><option>Temporary Issue</option><option>Other</option></select></label>
+            <label>Department<input name="department" placeholder="Store / Maintenance"></label>
+            <label>Warehouse<input name="warehouse"></label>
+            <label>Reference No.<input name="referenceNo"></label>
+            <label>PO / Work Order<input name="poNo"></label>
+            <label>Employee Name<input name="employeeName" required></label>
+            <label>Employee ID<input name="employeeId"></label>
+            <label>Designation<input name="designation"></label>
+            <label>Contact No.<input name="contact"></label>
+            <label>Vehicle No.<input name="vehicleNo"></label>
+            <label>Driver Name<input name="driverName"></label>
+            <label class="span-2">Destination<input name="destination"></label>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h2>Inventory Items</h2><button type="button" class="btn primary" id="addItemBtn">＋ Add Item</button></div>
+          <div class="table-wrap"><table class="item-table"><thead><tr><th>SL</th><th>Item Code</th><th>Old Part No.</th><th>New Part No.</th><th>Description</th><th>Unit</th><th>Qty</th><th>Serial / Asset</th><th>Condition</th><th></th></tr></thead><tbody id="itemRows"></tbody></table></div>
+          <div class="totals">Lines: <b id="lineTotal">0</b> &nbsp; Total Qty: <b id="qtyTotal">0</b></div>
+        </div>
+
+        <div class="card">
+          <div class="form-grid">
+            <label class="span-2">Remarks<textarea name="remarks" rows="3"></textarea></label>
+            <label>Prepared By<input name="preparedBy"></label>
+            <label>Checked By<input name="checkedBy"></label>
+            <label>Approved By<input name="approvedBy"></label>
+            <label>Received By<input name="receivedBy"></label>
+            <label>Status<select name="status"><option>Draft</option><option>Pending</option><option>Approved</option><option>Issued</option><option>Returned</option><option>Closed</option><option>Cancelled</option></select></label>
+            <label>Template<select name="templateId" id="templateSelect"></select></label>
+          </div>
+          <div class="form-actions"><button type="button" class="btn secondary" id="clearPassBtn">Clear</button><button type="button" class="btn secondary" id="previewPassBtn">Preview</button><button class="btn primary">Save Gate Pass</button></div>
+        </div>
+      </form>
+    </section>
+
+    <section id="page-inventory" class="page">
+      <div class="toolbar"><input id="inventorySearch" class="search" placeholder="Search item code, part number, description..."><button class="btn primary" id="addInventoryBtn">＋ Add Inventory</button><button class="btn secondary" id="exportCsvBtn">⇩ CSV</button></div>
+      <div class="card table-card"><div class="table-wrap"><table><thead><tr><th>Item Code</th><th>Old Part</th><th>New Part</th><th>Description</th><th>Unit</th><th>Stock</th><th>Min</th><th>Location</th><th>Actions</th></tr></thead><tbody id="inventoryTable"></tbody></table></div></div>
+    </section>
+
+    <section id="page-templates" class="page">
+      <div class="toolbar"><button class="btn primary" id="newTemplateBtn">＋ New Template</button><button class="btn secondary" id="importTemplateBtn">⇧ Import HTML</button><input id="templateFile" type="file" accept=".html,.htm" hidden></div>
+      <div class="template-layout">
+        <div class="card"><h2>Saved Templates</h2><div id="templateList"></div></div>
+        <div class="card editor-card">
+          <div class="editor-head"><input id="templateName" placeholder="Template name"><button class="btn primary" id="saveTemplateBtn">Save</button><button class="btn secondary" id="downloadTemplateBtn">Download</button></div>
+          <div class="editor-grid"><textarea id="templateEditor" spellcheck="false"></textarea><iframe id="templatePreview" title="Template preview"></iframe></div>
+          <div class="help"><b>Placeholders:</b> {{gate_pass_no}} {{date}} {{type}} {{employee_name}} {{employee_id}} {{department}} {{warehouse}} {{destination}} {{vehicle_no}} {{driver_name}} {{reference_no}} {{po_no}} {{remarks}} {{prepared_by}} {{checked_by}} {{approved_by}} {{received_by}} {{total_quantity}} {{items}}</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-settings" class="page">
+      <div class="card"><h2>Company Settings</h2><div class="form-grid" id="settingsForm">
+        <label>Company Name<input id="sCompanyName"></label><label>Phone<input id="sPhone"></label><label>Email<input id="sEmail"></label><label>Address<textarea id="sAddress"></textarea></label>
+        <label>Gate Pass Prefix<input id="sPrefix"></label><label>Next Number<input id="sNextNo" type="number"></label><label>Number Length<input id="sLength" type="number"></label>
+      </div><div class="form-actions"><button class="btn primary" id="saveSettingsBtn">Save Settings</button><button class="btn danger" id="resetBtn">Reset All Data</button></div></div>
+    </section>
+  </main>
+</div>
+
+<div class="modal" id="modal"><div class="modal-box"><div class="modal-head"><h2 id="modalTitle">Preview</h2><button class="icon-btn" id="modalClose">×</button></div><div id="modalBody"></div></div></div>
+
+<script src="js/database.js"></script>
+<script src="js/template-engine.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
